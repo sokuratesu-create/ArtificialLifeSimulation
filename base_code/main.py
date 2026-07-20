@@ -64,9 +64,8 @@ def display_genes(org_list):
     plt.figure(figsize=(10, 6))
     plt.scatter([org.org_id for org in org_list], stamina_values, color="black", marker="o")
     plt.title("Stamina")
-    print("before show")
-    plt.show()
-    print("after show")
+    plt.savefig("stamina.png")
+    plt.close()
 
 
 
@@ -161,11 +160,14 @@ def main():
             print_breeding(org_list)
             display_genes(org_list)
             pygame.time.wait(1000)
+
             pygame.quit()
             return
 
         
         clock.tick(30)
+        pygame.quit()
+        return
 
 
 if __name__ == "__main__":
