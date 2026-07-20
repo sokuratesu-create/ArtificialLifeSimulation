@@ -64,7 +64,9 @@ def display_genes(org_list):
     plt.figure(figsize=(10, 6))
     plt.scatter([org.org_id for org in org_list], stamina_values, color="black", marker="o")
     plt.title("Stamina")
+    print("before show")
     plt.show()
+    print("after show")
 
 
 
