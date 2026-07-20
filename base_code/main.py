@@ -9,6 +9,9 @@ except ImportError:
 
 from model.organism import Organism
 
+# vscodeではTrue, colabではFalse
+VISUALIZE = True
+
 ORG_NUM = 100
 FOOD_NUM = 40
 FOOD_COLOR = (255, 220, 50)
@@ -71,23 +74,26 @@ def display_genes(org_list):
 
 
 def main():
-    pygame.init()
     width, height = 1000, 1000
-    screen = pygame.display.set_mode((width, height))
-    pygame.display.set_caption("Organism Simulation")
     flame_count = 0
-    max_flame = 900
+    max_flame = 600
+    if VISUALIZE:
+        pygame.init()
+        screen = pygame.display.set_mode((width, height))
+        pygame.display.set_caption("Organism Simulation")
+        clock = pygame.time.Clock()
 
     org_list = [Organism(i, width, height) for i in range(ORG_NUM)]
     food_list = [Food((random.uniform(0, width), random.uniform(0, height))) for _ in range(FOOD_NUM)]
 
-    clock = pygame.time.Clock()
 
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+        if VISUALIZE:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                    return
 
         #体力0の個体は非表示にする
         org_list = [org for org in org_list if org.stamina > 0]
@@ -136,17 +142,20 @@ def main():
         if len(food_list) < FOOD_NUM:
             food_list.append(Food((random.uniform(0, width), random.uniform(0, height))))
 
-        screen.fill((0, 0, 0))
+        if VISUALIZE:
+            screen.fill((0, 0, 0))
 
-        for food in food_list:
-            food.display(screen)
+            for food in food_list:
+                food.display(screen)
 
-        for org in org_list:
-            org.display(screen, flame_count)
+            for org in org_list:
+                org.display(screen, flame_count)
+
+            pygame.display.flip()
+            clock.tick(30)
 
         flame_count += 1
 
-        pygame.display.flip()
 
         """
         if len(org_list) <= REMAINING_INDIVIDUALS:
@@ -161,11 +170,12 @@ def main():
             display_genes(org_list)
             pygame.time.wait(1000)
 
-            pygame.quit()
+            if VISUALIZE:
+                pygame.quit()
+
             return
 
         
-        clock.tick(30)
 
 
 if __name__ == "__main__":
