@@ -1,11 +1,7 @@
 import pygame
 import random
 import numpy as np
-
-try:
-    import matplotlib.pyplot as plt
-except ImportError:
-    plt = None
+import matplotlib.pyplot as plt
 
 from model.organism import Organism
 
@@ -18,8 +14,8 @@ FOOD_COLOR = (255, 220, 50)
 FOOD_RADIUS = 4
 FOOD_EAT_RADIUS = 15
 REMAINING_INDIVIDUALS = 10
-REPRODUCTION_DISTANCE = 5
-REPRODUCTION_COOLDOWN = 30
+REPRODUCTION_DISTANCE = 5 #繁殖できる2個体の距離の最大値
+REPRODUCTION_COOLDOWN = 30 #各個体の繁殖クールダウンフレーム
 
 class Food:
     def __init__(self, position):
@@ -74,16 +70,25 @@ def display_genes(org_list):
 
 
 def main():
-    width, height = 1000, 1000
+    width, height = 500, 500
     flame_count = 0
     max_flame = 600
+    gender = [1, 2] # 1:オス, 2:メス
     if VISUALIZE:
         pygame.init()
         screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Organism Simulation")
         clock = pygame.time.Clock()
 
-    org_list = [Organism(i, width, height) for i in range(ORG_NUM)]
+    #初期個体の生成
+    org_list = []
+    for i in range(ORG_NUM):
+        if (i + 1) % 20 == 0:
+            genotype = ("W","D") #遺伝子ドライブ保持個体を20個体に1個体ずつ生成*5個体はこっち
+        else:
+            genotype = ("W","W") #遺伝子ドライブ非保持個体*95個体はこっち
+        org = Organism(i, width, height, random.choice(gender), drive_genotype=genotype)
+        org_list.append(org)
     food_list = [Food((random.uniform(0, width), random.uniform(0, height))) for _ in range(FOOD_NUM)]
 
 
@@ -105,13 +110,16 @@ def main():
         new_orgs = []
         for i in range(len(org_list)):
             for j in range(i + 1, len(org_list)):
+                if org_list[i].gender == org_list[j].gender:
+                    continue
+
                 org_a = org_list[i]
                 org_b = org_list[j]
 
                 if np.linalg.norm(org_a.position - org_b.position) <= REPRODUCTION_DISTANCE:
                     if org_a.reproduction_cooldown <= 0 and org_b.reproduction_cooldown <= 0:
                         next_id = max([org.org_id for org in org_list] + [org.org_id for org in new_orgs], default = -1) + 1
-                        child = org_a.reproduce(next_id, width, height, org_b, flame_count)
+                        child = org_a.reproduce(next_id, width, height, random.choice(gender), org_b, flame_count, org_a.drive_genotype, org_b.drive_genotype)
                         new_orgs.append(child)
                         org_a.reproduction_cooldown = REPRODUCTION_COOLDOWN
                         org_b.reproduction_cooldown = REPRODUCTION_COOLDOWN
@@ -168,6 +176,20 @@ def main():
         if flame_count >= max_flame:
             print_breeding(org_list)
             display_genes(org_list)
+
+            #生き残った個体の番号とドライブを保有してるかの情報確認
+            ikinokori = [0, 0, 0]
+            for org in org_list:     
+                print(f"Org {org.org_id}: {org.drive_genotype}")
+                if org.org_id > 99:
+                    if org.drive_genotype == ["W","W"]:
+                        ikinokori[0] += 1
+                    elif org.drive_genotype == ["D","D"]:
+                        ikinokori[2] += 1
+                    else:
+                        ikinokori[1] += 1
+            print(f"生き残った個体の遺伝子情報: {ikinokori}")
+            
             pygame.time.wait(1000)
 
             if VISUALIZE:

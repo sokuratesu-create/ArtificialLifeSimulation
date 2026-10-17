@@ -9,8 +9,8 @@ RANGE_OF_DIRECTIONS = [0, 360]
 ORGANISM_COLORS = ['#FFA5CC', '#A0D4FF']
 
 #体力の定数(min, max)
-STAMINA_MIN = 50
-STAMINA_MAX = 100
+STAMINA_MIN = 75
+STAMINA_MAX = 125
 
 #移動速度の最大最小値
 SPEED_MIN = 1
@@ -26,18 +26,20 @@ REPRODUCTION_COOLDOWN = 30
 
 
 class Organism:
-    def __init__(self, org_id, width, height, initial_genes=None):
+    def __init__(self, org_id, width, height, gender, initial_genes=None, drive_genotype=("W","W")):
         self.org_id = org_id
         self.width = width
         self.height = height
+        self.gender = gender
         self.direction = random.uniform(
             np.radians(RANGE_OF_DIRECTIONS[0]),
             np.radians(RANGE_OF_DIRECTIONS[1])
         )
+        self.drive_genotype = drive_genotype #遺伝子ドライブの保持
         #個体の初期位置をランダムに設定
         self.position = np.array([random.uniform(0, width), random.uniform(0, height)])
         if initial_genes is None:
-            #体力遺伝子の生成と移動速度遺伝子と餌感知範囲遺伝子の生成
+            #体力遺伝子の生成と移動速度遺伝子と餌感知範囲遺伝子を生成するところ
             self.genes = {"stamina": random.uniform(STAMINA_MIN, STAMINA_MAX),
                         "detection_range": random.uniform(RANGE_FOOD_DETECTION_MIN, RANGE_FOOD_DETECTION_MAX),
                         "speed": random.uniform(SPEED_MIN, SPEED_MAX)}
@@ -63,7 +65,7 @@ class Organism:
     def _clip_gene(self, value, min_value, max_value):
         return max(min_value, min(max_value, value))
     
-    def reproduce(self, child_id, width, height, partner, current_frame):
+    def reproduce(self, child_id, width, height, gender, partner, current_frame, a_drive, b_drive):
         # 親からの遺伝子の平均を計算してこの遺伝子とする
         child_genes = {
             "stamina": self._clip_gene(
@@ -83,8 +85,26 @@ class Organism:
                 ),
         }
 
-        child = Organism(child_id, width, height, initial_genes=child_genes)
+        #保持する遺伝子情報の決定(["W","D"]みたいな)
+        type_list = []
+        for i in [a_drive, b_drive]:
+            if i == ["W","W"]:
+                a = "W"
+                type_list.append(a)
+            elif i == ["D","D"]:
+                a = "D"
+                type_list.append(a)
+            else: # WDまたはDWの場合
+                if random.random() < 0.9: # いったんDは90%の確率で子に遺伝
+                    a = "D"
+                    type_list.append(a)
+                else:
+                    a = "W"
+                    type_list.append(a)
+
+        child = Organism(child_id, width, height, gender, initial_genes=child_genes, drive_genotype=type_list)
         child.birth_frame = current_frame
+
         # 子の位置を親の中間に設定
         child.position = np.array([
             (self.position[0] + partner.position[0]) / 2,
@@ -133,7 +153,7 @@ class Organism:
             self.position[1] = np.abs(self.position[1] - self.height)
 
         #体力消費の処理
-        self.stamina -= int(0.5 * (self.speed / SPEED_MIN)) # 移動速度に応じて体力を消費
+        self.stamina -= int(0.7 * (self.speed / SPEED_MIN)) # 移動速度に応じて体力を消費
         if self.stamina <= 0:
             self.stamina = 0
             self.velocity = np.zeros(2)
