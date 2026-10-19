@@ -72,7 +72,7 @@ def display_genes(org_list):
 def main():
     width, height = 500, 500
     flame_count = 0
-    max_flame = 600
+    max_flame = 750
     gender = [1, 2] # 1:オス, 2:メス
     if VISUALIZE:
         pygame.init()
@@ -180,7 +180,7 @@ def main():
             #生き残った個体の番号とドライブを保有してるかの情報確認
             ikinokori = [0, 0, 0]
             for org in org_list:     
-                print(f"Org {org.org_id}: {org.drive_genotype}")
+                #print(f"Org {org.org_id}: {org.drive_genotype}")
                 if org.org_id > 99:
                     if org.drive_genotype == ["W","W"]:
                         ikinokori[0] += 1
@@ -188,7 +188,7 @@ def main():
                         ikinokori[2] += 1
                     else:
                         ikinokori[1] += 1
-            print(f"生き残った個体の遺伝子情報: {ikinokori}")
+            print(f"生き残った個体の遺伝子情報: {ikinokori[0]}WW,{ikinokori[1]}WD/DW,{ikinokori[2]}DD")
             
             pygame.time.wait(1000)
 

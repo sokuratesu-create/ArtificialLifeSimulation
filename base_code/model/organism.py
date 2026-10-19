@@ -66,24 +66,22 @@ class Organism:
         return max(min_value, min(max_value, value))
     
     def reproduce(self, child_id, width, height, gender, partner, current_frame, a_drive, b_drive):
-        # 親からの遺伝子の平均を計算してこの遺伝子とする
+        # 親からの遺伝子を算術交叉で計算して子の遺伝子とする(突然変異で±10%の範囲で変化、確率は5%)
+        p = 0.05 # 突然変異の確率
+        constant = 0.5 # 親からの遺伝子割合
         child_genes = {
-            "stamina": self._clip_gene(
-                (self.genes["stamina"] + partner.genes["stamina"]) / 2,
-                STAMINA_MIN,
-                STAMINA_MAX,
-                ),
-            "detection_range": self._clip_gene(
-                (self.genes["detection_range"] + partner.genes["detection_range"]) / 2,
-                RANGE_FOOD_DETECTION_MIN,
-                RANGE_FOOD_DETECTION_MAX,
-                ),
-            "speed": self._clip_gene(
-                (self.genes["speed"] + partner.genes["speed"]) / 2,
-                SPEED_MIN,
-                SPEED_MAX,
-                ),
+            "stamina": self.genes["stamina"] * constant + partner.genes["stamina"] * (1 - constant),
+            "detection_range": self.genes["detection_range"] * constant + partner.genes["detection_range"] * (1 -constant),
+            "speed": self.genes["speed"] * constant + partner.genes["speed"] * (1 - constant),
         }
+
+        #突然変異の処理
+        for gene in child_genes:
+            if random.random() < p:
+                if random.random() < 0.5:
+                    child_genes[gene] *= 1.1
+                else:
+                    child_genes[gene] *= 0.9
 
         #保持する遺伝子情報の決定(["W","D"]みたいな)
         type_list = []
