@@ -17,8 +17,8 @@ SPEED_MIN = 1
 SPEED_MAX = 3
 
 #餌を感知できる範囲
-RANGE_FOOD_DETECTION_MIN = 40
-RANGE_FOOD_DETECTION_MAX = 75
+RANGE_FOOD_DETECTION_MIN = 25
+RANGE_FOOD_DETECTION_MAX = 60
 
 #繁殖距離とクールダウン
 REPRODUCTION_DISTANCE = 5
@@ -62,8 +62,8 @@ class Organism:
             self.reproduction_cooldown -= 1
 
 
-    def _clip_gene(self, value, min_value, max_value):
-        return max(min_value, min(max_value, value))
+    """def _clip_gene(self, value, min_value, max_value):
+        return max(min_value, min(max_value, value))"""
     
     def reproduce(self, child_id, width, height, gender, partner, current_frame, a_drive, b_drive):
         # 親からの遺伝子を算術交叉で計算して子の遺伝子とする(突然変異で±10%の範囲で変化、確率は5%)
@@ -122,13 +122,15 @@ class Organism:
         self.update_reproduction_cooldown()  # 繁殖クールダウンを更新
         target_food = None
         min_dist = float("inf")
-        
+
+        # 餌の中で最も近いものを探す
         for food in food_list:
             dist = np.linalg.norm(food.position - self.position)
             if dist < min_dist and dist <= self.detection_range:
                 min_dist = dist
                 target_food = food
 
+        # 目標の餌が見つかった場合、その方向に向かって移動する
         if target_food is not None:
             dx, dy = target_food.position - self.position
             self.direction = np.arctan2(dy, dx)
@@ -151,7 +153,7 @@ class Organism:
             self.position[1] = np.abs(self.position[1] - self.height)
 
         #体力消費の処理
-        self.stamina -= int(0.7 * (self.speed / SPEED_MIN)) # 移動速度に応じて体力を消費
+        self.stamina -= 0.2 + (0.2 * self.speed) # 移動速度に応じて体力を消費
         if self.stamina <= 0:
             self.stamina = 0
             self.velocity = np.zeros(2)

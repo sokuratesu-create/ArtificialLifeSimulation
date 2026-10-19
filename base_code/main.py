@@ -66,13 +66,23 @@ def display_genes(org_list):
     plt.savefig("stamina.png")
     plt.close()
 
+    plt.figure(figsize=(10, 6))
+    plt.scatter([org.org_id for org in org_list], detection_range_values, color="black", marker="o")
+    plt.title("detection_range")
+    plt.savefig("detection.png")
+    plt.close()
 
+    plt.figure(figsize=(10, 6))
+    plt.scatter([org.org_id for org in org_list], speed_values, color="black", marker="o")
+    plt.title("speed")
+    plt.savefig("speed.png")
+    plt.close()
 
 
 def main():
     width, height = 500, 500
     flame_count = 0
-    max_flame = 750
+    max_flame = 900
     gender = [1, 2] # 1:オス, 2:メス
     if VISUALIZE:
         pygame.init()
@@ -84,9 +94,9 @@ def main():
     org_list = []
     for i in range(ORG_NUM):
         if (i + 1) % 20 == 0:
-            genotype = ("W","D") #遺伝子ドライブ保持個体を20個体に1個体ずつ生成*5個体はこっち
+            genotype = ["W","D"] #遺伝子ドライブ保持個体を20個体に1個体ずつ生成*5個体はこっち
         else:
-            genotype = ("W","W") #遺伝子ドライブ非保持個体*95個体はこっち
+            genotype = ["W","W"] #遺伝子ドライブ非保持個体*95個体はこっち
         org = Organism(i, width, height, random.choice(gender), drive_genotype=genotype)
         org_list.append(org)
     food_list = [Food((random.uniform(0, width), random.uniform(0, height))) for _ in range(FOOD_NUM)]
