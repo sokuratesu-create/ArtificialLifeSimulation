@@ -9,21 +9,24 @@ RANGE_OF_DIRECTIONS = [0, 360]
 ORGANISM_COLORS = ['#FFA5CC', '#A0D4FF']
 
 #体力の定数(min, max)
-STAMINA_MIN = 75
-STAMINA_MAX = 125
+STAMINA_MIN = 85
+STAMINA_MAX = 135
 
 #移動速度の最大最小値
 SPEED_MIN = 1
 SPEED_MAX = 3
 
 #餌を感知できる範囲
-RANGE_FOOD_DETECTION_MIN = 25
-RANGE_FOOD_DETECTION_MAX = 60
+RANGE_FOOD_DETECTION_MIN = 35
+RANGE_FOOD_DETECTION_MAX = 75
 
 #繁殖距離とクールダウン
 REPRODUCTION_DISTANCE = 5
 REPRODUCTION_COOLDOWN = 30
 
+# 暑さ耐性の範囲
+HEAT_TOLERANCE_MIN = 0.0
+HEAT_TOLERANCE_MAX = 1.0
 
 class Organism:
     def __init__(self, org_id, width, height, gender, initial_genes=None, drive_genotype=("W","W")):
@@ -42,7 +45,11 @@ class Organism:
             #体力遺伝子の生成と移動速度遺伝子と餌感知範囲遺伝子を生成するところ
             self.genes = {"stamina": random.uniform(STAMINA_MIN, STAMINA_MAX),
                         "detection_range": random.uniform(RANGE_FOOD_DETECTION_MIN, RANGE_FOOD_DETECTION_MAX),
-                        "speed": random.uniform(SPEED_MIN, SPEED_MAX)}
+                        "speed": random.uniform(SPEED_MIN, SPEED_MAX),
+                        "heat_tolerance": random.uniform(
+                            HEAT_TOLERANCE_MIN,
+                            HEAT_TOLERANCE_MAX
+                        ),}
         else:
             self.genes = dict(initial_genes)  # 遺伝子をコピーして保持
         self.stamina = self.genes["stamina"]
@@ -54,8 +61,11 @@ class Organism:
         self.velocity = np.array([np.cos(self.direction), np.sin(self.direction)]) * self.speed
         
         self.polygon = np.array([(20, 0), (0, 5), (0, -5)])
-        self.type_id = self.org_id % 2
-        self.color = ORGANISM_COLORS[self.type_id]
+        # オスは水色、メスはピンク
+        if self.gender == 1:
+            self.color = '#A0D4FF'
+        else:
+            self.color = '#FFA5CC'
 
     def update_reproduction_cooldown(self):
         if self.reproduction_cooldown > 0:
@@ -73,7 +83,8 @@ class Organism:
             "stamina": self.genes["stamina"] * constant + partner.genes["stamina"] * (1 - constant),
             "detection_range": self.genes["detection_range"] * constant + partner.genes["detection_range"] * (1 -constant),
             "speed": self.genes["speed"] * constant + partner.genes["speed"] * (1 - constant),
-        }
+            "heat_tolerance": (self.genes["heat_tolerance"] * constant+ partner.genes["heat_tolerance"] * (1 - constant)),
+            }
 
         #突然変異の処理
         for gene in child_genes:
@@ -118,7 +129,7 @@ class Organism:
         return child
 
 
-    def move(self, food_list):
+    def move(self, food_list, is_hot, hot_multiplier, cold_multiplier):
         self.update_reproduction_cooldown()  # 繁殖クールダウンを更新
         target_food = None
         min_dist = float("inf")
@@ -153,7 +164,19 @@ class Organism:
             self.position[1] = np.abs(self.position[1] - self.height)
 
         #体力消費の処理
-        self.stamina -= 0.2 + (0.2 * self.speed) # 移動速度に応じて体力を消費
+        # 基本の体力消費量
+        stamina_cost = 0.2 + (0.2 * self.speed)
+
+        # Dを1つ以上持っているか
+        has_drive = "D" in self.drive_genotype
+
+        # 暑さ耐性がある場合、体力消費が減る
+        if is_hot:
+            heat_penalty = 0.5 * (1 - self.genes["heat_tolerance"])
+            stamina_cost *= (1 + heat_penalty)
+
+        self.stamina -= stamina_cost
+
         if self.stamina <= 0:
             self.stamina = 0
             self.velocity = np.zeros(2)

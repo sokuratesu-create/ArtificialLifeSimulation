@@ -19,6 +19,12 @@ REMAINING_INDIVIDUALS = 10
 REPRODUCTION_DISTANCE = 5 #繁殖できる2個体の距離の最大値
 REPRODUCTION_COOLDOWN = 30 #各個体の繁殖クールダウンフレーム
 
+# 気温変化の設定
+HOT_FRAMES = 300
+COLD_FRAMES = 300
+HOT_STAMINA_MULTIPLIER = 1.5
+COLD_STAMINA_MULTIPLIER = 1.0
+
 class Food:
     def __init__(self, position):
         self.position = np.array(position)
@@ -91,6 +97,7 @@ def main():
         screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Organism Simulation")
         clock = pygame.time.Clock()
+        font = pygame.font.Font(None, 28)
 
     #初期個体の生成
     org_list = []
@@ -115,8 +122,17 @@ def main():
         #体力0の個体は非表示にする
         org_list = [org for org in org_list if org.stamina > 0]
 
+        # 気温を300フレームごとに暑い・寒いと切り替える
+        cycle = HOT_FRAMES + COLD_FRAMES
+        is_hot = (flame_count % cycle) < HOT_FRAMES
+        
+        if is_hot:
+            stamina_multiplier = HOT_STAMINA_MULTIPLIER
+        else:
+            stamina_multiplier = COLD_STAMINA_MULTIPLIER
+
         for org in org_list:
-            org.move(food_list)
+            org.move(food_list, is_hot, HOT_STAMINA_MULTIPLIER, COLD_STAMINA_MULTIPLIER)
 
         # 繁殖の処理
         new_orgs = []
@@ -152,7 +168,7 @@ def main():
             for org in org_list:
                 if np.linalg.norm(org.position - food.position) <= FOOD_EAT_RADIUS:
                     eaten = True
-                    org.stamina = min(org.genes["stamina"], org.stamina + 20)
+                    org.stamina = min(org.genes["stamina"], org.stamina + 22)
                     break
             if not eaten:
                 remaining_food.append(food)
@@ -164,6 +180,12 @@ def main():
 
         if VISUALIZE:
             screen.fill((0, 0, 0))
+            # フレーム数を表示
+            font = pygame.font.Font(None, 28)
+            frame_text = font.render(
+                f"Frame: {flame_count}", True, (255, 255, 255)
+            )
+            screen.blit(frame_text, (10, 10))
 
             for food in food_list:
                 food.display(screen)
