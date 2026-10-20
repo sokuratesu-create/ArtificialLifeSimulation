@@ -1,3 +1,5 @@
+# 遺伝子ドライブありのシミュレーション
+
 import pygame
 import random
 import numpy as np
@@ -40,7 +42,7 @@ def print_final_organisms(org_list):
     print(all_stamina / len_orgs, all_detection_range / len_orgs, all_speed / len_orgs)
 """
 
-# 繁殖できてるかの確認のやつ
+# 繁殖できてるかの確認のやつ(生き残った個体の数と最大の個体番号を出力)
 def print_breeding(org_list):
     print(len(org_list))
     print(max(org.org_id for org in org_list))
