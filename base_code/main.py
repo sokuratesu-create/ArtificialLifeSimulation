@@ -4,6 +4,7 @@ import pygame
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 from model.organism import Organism
 
@@ -52,6 +53,8 @@ def print_final_organisms(org_list):
 def print_breeding(org_list):
     print(len(org_list))
     print(max(org.org_id for org in org_list))
+
+#-------------------------------------------------------------------------------------------
 
 # グラフ上に個体の遺伝子を表示する
 def display_genes(org_list):
@@ -114,6 +117,53 @@ def display_population_graph(population_history):
     plt.show()
     plt.close()
 
+#暑さ耐性に関する個体の記録
+def record_population_data(org_list, frame):
+    population = len(org_list)
+
+    if population == 0:
+        avg_heat_tolerance = 0
+        std_heat_tolerance = 0
+        d_carrier_rate = 0
+        d_allele_frequency = 0
+    else:
+        heat_values = [org.genes["heat_tolerance"] for org in org_list]
+        avg_heat_tolerance = float(np.mean(heat_values))
+        std_heat_tolerance = float(np.std(heat_values))
+
+        d_carriers = sum(1 for org in org_list if "D" in org.drive_genotype)
+        d_carrier_rate = d_carriers / population
+
+        d_allele_count = sum(org.drive_genotype.count("D") for org in org_list)
+        d_allele_frequency = d_allele_count / (population * 2)
+
+    return {
+        "frame": frame,
+        "population": population,
+        "avg_heat_tolerance": avg_heat_tolerance,
+        "std_heat_tolerance": std_heat_tolerance,
+        "d_carrier_rate": d_carrier_rate,
+        "d_allele_frequency": d_allele_frequency,
+    }
+
+#csvファイルに保存
+def save_population_data(history, filename="population_data.csv"):
+    fieldnames = [
+        "frame",
+        "population",
+        "avg_heat_tolerance",
+        "std_heat_tolerance",
+        "d_carrier_rate",
+        "d_allele_frequency",
+    ]
+
+    with open(filename, "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(history)
+
+    print(f"記録データを{filename}に保存しました")
+
 #---------------------------------------------------------------------------------------------
 
 def main():
@@ -121,6 +171,7 @@ def main():
     flame_count = 0
     max_flame = 2000
     population_history = []
+    simulation_history = []
     gender = [1, 2] # 1:オス, 2:メス
     if VISUALIZE:
         pygame.init()
@@ -209,6 +260,7 @@ def main():
             food_list.append(Food((random.uniform(0, width), random.uniform(0, height))))
 
         population_history.append((flame_count, len(org_list)))
+        simulation_history.append(record_population_data(org_list, flame_count))
 
         if VISUALIZE:
             screen.fill((0, 0, 0))
@@ -262,6 +314,7 @@ def main():
             if VISUALIZE:
                 pygame.quit()
 
+            save_population_data(simulation_history)
             return
 
         
