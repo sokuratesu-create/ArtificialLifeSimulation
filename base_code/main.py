@@ -17,11 +17,11 @@ FOOD_RADIUS = 4
 FOOD_EAT_RADIUS = 15
 REMAINING_INDIVIDUALS = 10
 REPRODUCTION_DISTANCE = 5 #繁殖できる2個体の距離の最大値
-REPRODUCTION_COOLDOWN = 30 #各個体の繁殖クールダウンフレーム
+REPRODUCTION_COOLDOWN = 45 #各個体の繁殖クールダウンフレーム
 
 # 気温変化の設定
-HOT_FRAMES = 300
-COLD_FRAMES = 300
+HOT_FRAMES = 500
+COLD_FRAMES = 500
 HOT_STAMINA_MULTIPLIER = 1.5
 COLD_STAMINA_MULTIPLIER = 1.0
 
@@ -86,11 +86,38 @@ def display_genes(org_list):
     plt.savefig("speed.png")
     plt.close()
 
+def display_population_graph(population_history):
+    frames = [data[0] for data in population_history]
+    populations = [data[1] for data in population_history]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(frames, populations, color="black")
+
+    #環境が切り替わるフレーム
+    plt.axvline(x=500, color="orange", linestyle="--", label="Enviroment change")
+    plt.axvline(x=1000, color="blue", linestyle="--", label="Enviroment change")
+    plt.axvline(x=1500, color="orange", linestyle="--", label="Enviroment change")
+    plt.axvline(x=2000, color="blue", linestyle="--", label="Enviroment change")
+
+    plt.title("Population over Time")
+    plt.xlabel("Frame")
+    plt.ylabel("Number of Living Organisms")
+    plt.xlim(0, 2000)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    plt.savefig("population.png")
+    plt.show()
+    plt.close()
+
+#---------------------------------------------------------------------------------------------
 
 def main():
     width, height = 500, 500
     flame_count = 0
-    max_flame = 900
+    max_flame = 2000
+    population_history = []
     gender = [1, 2] # 1:オス, 2:メス
     if VISUALIZE:
         pygame.init()
@@ -168,7 +195,7 @@ def main():
             for org in org_list:
                 if np.linalg.norm(org.position - food.position) <= FOOD_EAT_RADIUS:
                     eaten = True
-                    org.stamina = min(org.genes["stamina"], org.stamina + 22)
+                    org.stamina = min(org.genes["stamina"], org.stamina + 25)
                     break
             if not eaten:
                 remaining_food.append(food)
@@ -177,6 +204,8 @@ def main():
         # 餌の数が少なくなったら新しい餌を追加
         if len(food_list) < FOOD_NUM:
             food_list.append(Food((random.uniform(0, width), random.uniform(0, height))))
+
+        population_history.append((flame_count, len(org_list)))
 
         if VISUALIZE:
             screen.fill((0, 0, 0))
@@ -210,6 +239,7 @@ def main():
         if flame_count >= max_flame:
             print_breeding(org_list)
             display_genes(org_list)
+            display_population_graph(population_history)
 
             #生き残った個体の番号とドライブを保有してるかの情報確認
             ikinokori = [0, 0, 0]
