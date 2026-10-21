@@ -9,8 +9,8 @@ RANGE_OF_DIRECTIONS = [0, 360]
 ORGANISM_COLORS = ['#FFA5CC', '#A0D4FF']
 
 #体力の定数(min, max)
-STAMINA_MIN = 85
-STAMINA_MAX = 135
+STAMINA_MIN = 90
+STAMINA_MAX = 140
 
 #移動速度の最大最小値
 SPEED_MIN = 1
@@ -42,14 +42,11 @@ class Organism:
         #個体の初期位置をランダムに設定
         self.position = np.array([random.uniform(0, width), random.uniform(0, height)])
         if initial_genes is None:
-            #体力遺伝子の生成と移動速度遺伝子と餌感知範囲遺伝子を生成するところ
+            #体力遺伝子の生成と移動速度遺伝子と餌感知範囲遺伝子と暑さへの耐性遺伝子を生成
             self.genes = {"stamina": random.uniform(STAMINA_MIN, STAMINA_MAX),
                         "detection_range": random.uniform(RANGE_FOOD_DETECTION_MIN, RANGE_FOOD_DETECTION_MAX),
                         "speed": random.uniform(SPEED_MIN, SPEED_MAX),
-                        "heat_tolerance": random.uniform(
-                            HEAT_TOLERANCE_MIN,
-                            HEAT_TOLERANCE_MAX
-                        ),}
+                        "heat_tolerance": random.uniform(HEAT_TOLERANCE_MIN,HEAT_TOLERANCE_MAX),}
         else:
             self.genes = dict(initial_genes)  # 遺伝子をコピーして保持
         self.stamina = self.genes["stamina"]

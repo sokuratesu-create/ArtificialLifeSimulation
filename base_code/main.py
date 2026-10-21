@@ -70,18 +70,21 @@ def display_genes(org_list):
 
     plt.figure(figsize=(10, 6))
     plt.scatter([org.org_id for org in org_list], stamina_values, color="black", marker="o")
+    plt.ylim(80, 150)
     plt.title("Stamina")
     plt.savefig("stamina.png")
     plt.close()
 
     plt.figure(figsize=(10, 6))
     plt.scatter([org.org_id for org in org_list], detection_range_values, color="black", marker="o")
+    plt.ylim(25, 85)
     plt.title("detection_range")
     plt.savefig("detection.png")
     plt.close()
 
     plt.figure(figsize=(10, 6))
     plt.scatter([org.org_id for org in org_list], speed_values, color="black", marker="o")
+    plt.ylim(0, 4)
     plt.title("speed")
     plt.savefig("speed.png")
     plt.close()
